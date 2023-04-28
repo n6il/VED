@@ -44,17 +44,10 @@ scr_clear ()
 
 scr_linsert ()
 {
-    int y, cy;
-    char *lp;
+    int cy;
 
-    y = Bot_y;
     cy = Cur_y;
-    lp = Cur_lp;
-
-    while (y > Cur_y ) {
-	    lp = get_prev(lp);
-	    draw(lp, 0, y--);
-    }
+    draw(Cur_lp, 0, cy+1);
     mv_curs(cy,0);
     scr_eol();
 }
