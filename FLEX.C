@@ -11,50 +11,28 @@ init()
 
     if (Tabwidth == 0)
         Tabwidth = 4;
-    Max_mem = 30000;
+    Max_mem = 32000;
     while ((Mem_buf = malloc(Max_mem)) == 0)
         Max_mem -= 2000;
     free(Mem_buf);
     Max_mem -= 1024;
     Mem_buf = malloc(Max_mem);
-    Width = *(char *)0x21;
+    Width = 80;
     Lwidth = Width + 1;
     clr_scrn();
-    ioctl(1, TIOCGETP, &ss);
-    ss.sg_flags = CBREAK;
-    ioctl(1, TIOCSETP, &ss);
+    gtty(0, &ss);
+    ss.sg_flags = CBREAK | RAW | IOSPCL;
+    stty(0, &ss);
 }
-
-#ifdef EXECPROG
-char prog[40]="ac";
-int execflag=1;
-#endif
 
 quit()
 {
     struct sgttyb ss;
 
     mv_curs(0, 23);
-    write(1, "\n\r", 2);
-#ifdef EXECPROG
-    if (*prog && execflag && Fil_nam[0])
-        execprog();
-    else
-#endif
+    pcrlf (); /* write(1, "\n\i", 2); */
     exit(0);
 }
-
-#ifdef EXECPROG
-execprog()
-{
-    char buf[80];
-    strcpy(buf,prog);
-    strcat(buf," ");
-    strcat(buf,Fil_nam);
-    system(buf);
-    exit(99);
-}
-#endif
 
 /*
  *  Move the cursor to the appropriate position.
@@ -98,16 +76,16 @@ int n;
 {
     mv_curs(0, 23);
     while (n--)
-        write(1,"\n", 1);
+        pcrlf (); /* write(1,"\n\i", 2); */
     fix_msg();
 }
 
 getchar()
 {
-    int c;
+    char c;
 
     read(0, &c, 1);
-    return(c&0xff);
+    return(c);
 }
 
 /*

@@ -1,0 +1,17 @@
+cc ved.c +r +a +c +s
+cc scr.c +r +a +c +s
+cc flex.c +r +a +c +s
+cc file.c +r +a +c +s
+cc subs.c +r +a +c +s
+cc disp.c +r +a +c +s
+cc insert.c +r +a +c +s
+cc mem.c +r +a +c +s
+y o 1.ved.lst casm ved.a -o=ved.r +l +s
+y o 1.scr.lst casm scr.a -o=scr.r +l +s
+y o 1.flex.lst casm flex.a -o=flex.r +l +s
+y o 1.file.lst casm file.a -o=file.r +l +s
+y o 1.subs.lst casm subs.a -o=subs.r +l +s
+y o 1.disp.lst casm disp.a -o=disp.r +l +s
+y o 1.insert.lst casm insert.a -o=insert.r +l +s
+y o 1.mem.lst casm mem.a -o=mem.r +l +s
+cload 0.cstart.r ved.r scr.r flex.r file.r subs.r disp.r insert.r mem.r +l=0.clib.lib +o=ved.cmd +s

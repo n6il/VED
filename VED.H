@@ -1,6 +1,6 @@
-#define	SCR_TOP	1
-#define	SCR_BOT	24
-#define	STATUS	0
+#define SCR_TOP 1
+#define SCR_BOT 24
+#define STATUS  0
 
 int Max_mem;
 char *Mem_buf;
