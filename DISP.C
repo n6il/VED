@@ -27,6 +27,7 @@ int y;
                 write(1, "                     ", i-d);
                 d = i;
                 break;
+            case 0x00:
             case 0x0d:
                 clr_eol();
                 return;
