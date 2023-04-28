@@ -20,3 +20,4 @@ char Ybuf[1024];
 int Ylen;
 int Tabwidth;
 
+char *get_next(), *get_prev(), *index();

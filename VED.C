@@ -1,14 +1,22 @@
-/*	Copyright (c) 1982 by Manx Software Systems	*/
-/*	Copyright (c) 1982 by Jim Goodnow II		*/
+/*	Copyright (c) 1982, 1986 by Manx Software Systems	*/
+/*	Copyright (c) 1982, 1986 by Jim Goodnow II		*/
 
 #include	"ved.h"
+
+int errflag=0;
+int errline, errcol;
+char errmsg[90]; 
 
 main(argc, argv)
 int argc;
 char **argv;
 {
-	register int c, l;
+	register int c, l, i;
 	register char *t;
+#ifdef EXECPROG
+	extern char prog[];
+	char *pp;
+#endif
 
 	init();
 	End_buf = Mem_buf;
@@ -20,19 +28,55 @@ char **argv;
 			case 't':
 				Tabwidth = atoi(*argv+2);
 				break;
+#ifdef EXECPROG
+			case 'g':
+				strcpy(prog,*argv+2);
+				break;
+#endif
 			}
-		}
+		} 
+#ifdef EXECPROG
+		else if (**argv == '+'){
+			pp=index(*argv,',');
+			*pp=0;
+			errline=atoi(*argv+1);
+			errcol=atoi(pp+1);
+			while (--argc){
+				strcat(errmsg, *++argv);
+				strcat(errmsg," ");
+			}
+			errflag=1;
+			break;
+		} 
+#endif
 		else {
 			strcpy(Fil_nam, argv[0]);
-			break;
 		}
 	}
 	if (*Fil_nam == 0 || read_fil(Fil_nam) < 0)
 		t_insert(Cur_ptr, 0, "\r", 1);
 	Modflg = 0;
-	redraw(Mem_buf, 1, SCR_TOP);
-	stats();
+#ifdef EXECFLAG
+	if (errflag) {
+		Cur_lp = Mem_buf;
+		Cur_lin = 1;
+		while (Cur_lin != errline && (t = get_next(Cur_lp)) != End_buf) {
+			Cur_lp = t;
+			Cur_lin++;
+		}
+		Cur_ptr = Cur_lp + errcol;;
+		redraw(Cur_lp, Cur_lin, SCR_BOT/2);
+	} else
+#endif
+		redraw(Mem_buf, 1, SCR_TOP);
+#ifdef EXECFLAG
+	if (errflag)
+		mesg(errmsg);
+	else
+#endif
+		stats();
 	for (;;) {
+
 		set_param(Cur_lp);
 		mv_curs(Cur_x, Cur_y);
 		c = getchar();
@@ -41,24 +85,7 @@ char **argv;
 		switch (c) {
 #ifdef DEBUG
 		case '=':
-			mesg("b,c,t");
-			switch (getchar()) {
-			case 'b':
-				sprintf(Ybuf, "bot:lp=%d lin=%d y=%d",
-									Bot_lp-Mem_buf, Bot_lin, Bot_y);
-				mesg(Ybuf);
-				break;
-			case 'c':
-				sprintf(Ybuf, "cur:lp=%d lin=%d y=%d",
-									Cur_lp-Mem_buf, Cur_lin, Cur_y);
-				mesg(Ybuf);
-				break;
-			case 't':
-				sprintf(Ybuf, "top:lp=%d lin=%d y=%d",
-									Top_lp-Mem_buf, Top_lin, Top_y);
-				mesg(Ybuf);
-				break;
-			}
+			debug();
 			break;
 #endif
 		case 'r':
@@ -100,13 +127,19 @@ char **argv;
 			break;
 		case ' ':
 		case '\t':
+		case 0x15:
 			while (Num-- && *Cur_ptr != '\r')
 				Cur_ptr++;
 			break;
+		case 0x0b: /*up arrow */
+			l=Cur_ptr-Cur_lp;
+			t=Cur_lp;
 		case '-':
 			if (Cur_lp == Mem_buf)
 				break;
 			Cur_ptr = Cur_lp = get_prev(Cur_lp);
+			if (c==0xb)
+				Cur_ptr += (l<(i=t-Cur_lp-1)?l:i);
 			set_param(Cur_lp);
 			Cur_y -= Lin_siz;
 			Cur_lin--;
@@ -117,9 +150,13 @@ char **argv;
 					redraw(Cur_lp, Cur_lin, SCR_BOT/2);
 			}
 			break;
+		case 0xa: /* down arrow */
+			l=Cur_ptr-Cur_lp;
 		case '\r':
 			if (get_next(Cur_ptr) != End_buf) {
 				Cur_ptr = Cur_lp = get_next(Cur_ptr);
+				if (c==0xa)
+					Cur_ptr += (l<(i=get_next(Cur_lp)-Cur_lp-1)?l:i);
 				Cur_lin++;
 				Cur_y += Lin_siz;
 				if (Cur_lin == Bot_lin)
@@ -200,3 +237,32 @@ char **argv;
 	}
 }
 
+#ifdef DEBUG
+debug()
+{
+	mesg("b,c,t");
+	switch (getchar()) {
+	case 'b':
+		sprintf(Ybuf, "bot:lp=%d lin=%d y=%d",
+							Bot_lp-Mem_buf, Bot_lin, Bot_y);
+		mesg(Ybuf);
+		break;
+	case 'c':
+		sprintf(Ybuf, "cur:lp=%d lin=%d y=%d",
+							Cur_lp-Mem_buf, Cur_lin, Cur_y);
+		mesg(Ybuf);
+		break;
+	case 't':
+		sprintf(Ybuf, "top:lp=%d lin=%d y=%d",
+							Top_lp-Mem_buf, Top_lin, Top_y);
+		mesg(Ybuf);
+		break;
+	}
+	db();
+}
+#asm
+	public	db_
+db_	lda	#0
+	rts
+#endasm
+#endif

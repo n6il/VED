@@ -1,5 +1,5 @@
-/*	Copyright (c) 1982 by Manx Software Systems	*/
-/*	Copyright (c) 1982 by Jim Goodnow II		*/
+/*	Copyright (c) 1982, 1986 by Manx Software Systems	*/
+/*	Copyright (c) 1982, 1986 by Jim Goodnow II		*/
 
 #include	"ved.h"
 
@@ -8,6 +8,10 @@ colon()
 	char buf[80];
 	register char *cp;
 	register int c;
+	static int nowrite=0;
+#ifdef EXECFLAG
+	extern int execflag;
+#endif
 
 	cp = buf;
 	*cp++ = ':';
@@ -32,12 +36,23 @@ colon()
 		stats();
 		return;
 	case 'q':
-		if (Modflg == 0 || *++cp == '!')
+		while ((c=*++cp) && c != ' ')
+			if (c == '!')
+				nowrite=1;
+#ifdef EXECFLAG
+			else if (c == 'x')
+				execflag=0;
+#endif
+		if (Modflg == 0 || nowrite)
 			quit();
 		mesg("file modified - use q! to override");
 		return;
 	case 'w':
-		if (strcmp(cp, "wq") == 0) {
+		if (cp[1]=='q'){
+#ifdef EXECFLAG
+			if (cp[2]=='x')
+				execflag=0;
+#endif
 			if (writ_fil(Fil_nam) == 0)
 				quit();
 			return;
@@ -218,7 +233,7 @@ char *helpstr[] = {
 "z           redraw the screen",
 "/string     search for string",
 "n           repeat last search",
-":q          quit",
+":q[!][x]    quit",
 ":w          write file",
 ":r          read file",
 ":e          edit new file",
@@ -234,7 +249,7 @@ help()
 	mv_curs(0, SCR_TOP+1);
 	for (cp=helpstr;*cp;cp++) {
 		write(1, *cp, strlen(*cp));
-		write(1, "\r", 1);
+		write(1, "\r\n", 2);
 	}
 	mesg("VED 2.1 - hit return to continue");
 	while (getchar() != '\r')
@@ -243,3 +258,8 @@ help()
 	redraw(Cur_lp, Cur_lin, Cur_y);
 }
 
+blockmv(dst,src,cnt)
+char *dst, *src;
+{
+	movmem(src,dst,cnt);
+}

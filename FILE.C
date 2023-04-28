@@ -1,7 +1,8 @@
-/*	Copyright (c) 1982 by Manx Software Systems	*/
-/*	Copyright (c) 1982 by Jim Goodnow II		*/
+/*	Copyright (c) 1982, 1986 by Manx Software Systems	*/
+/*	Copyright (c) 1982, 1986 by Jim Goodnow II		*/
 
 #include	"ved.h"
+#define MODE 0xc3  /*file access mode for ProDOS */
 
 read_fil(name)
 char *name;
@@ -49,7 +50,7 @@ char *name;
 	maknam(msg, name);
 	mesg(msg);
 	tmp = Mem_buf;
-	if ((fd = creat(name, 0)) < 0) {
+	if ((fd = creat(name, MODE)) < 0) {
 		mesg("can't open file.");
 		return(-1);
 	}

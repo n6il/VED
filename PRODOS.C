@@ -1,34 +1,60 @@
-/*	Copyright (c) 1982, 1983 by Manx Software Systems	*/
-/*	Copyright (c) 1982, 1983 by Jim Goodnow II		*/
+/*	Copyright (c) 1982, 1983, 1986 by Manx Software Systems	*/
+/*	Copyright (c) 1982, 1983, 1986 by Jim Goodnow II		*/
 
 #include	"ved.h"
-#include	"kbctl.h"
+#include <sgtty.h>
 
 init()
 {
-	Tabwidth = ioctl(1, KB_TAB, 0);
+	struct sgttyb ss;
+	char *malloc();
+
+	if (Tabwidth == 0)
+		Tabwidth = 4;
 	Max_mem = 30000;
 	while ((Mem_buf = malloc(Max_mem)) == 0)
 		Max_mem -= 2000;
 	free(Mem_buf);
 	Max_mem -= 1024;
 	Mem_buf = malloc(Max_mem);
-	Width = ioctl(1, KB_WID);
+	Width = *(char *)0x21;
 	Lwidth = Width + 1;
 	clr_scrn();
-	ioctl(1, KB_ECHO, 0);
-	ioctl(1, KB_CRLF, 0);
-	ioctl(1, KB_INTR, 0);
-	ioctl(1, KB_EOF, 0);
-	Rscrl = dn_scrl();
+	ioctl(1, TIOCGETP, &ss);
+	ss.sg_flags = CBREAK;
+	ioctl(1, TIOCSETP, &ss);
 }
+
+#ifdef EXECPROG
+char prog[40]="ac";
+int execflag=1;
+#endif
 
 quit()
 {
+	struct sgttyb ss;
+
 	mv_curs(0, 23);
 	write(1, "\n\r", 2);
+#ifdef EXECPROG
+	if (*prog && execflag && Fil_nam[0])
+		execprog();
+	else
+#endif
 	exit(0);
 }
+
+#ifdef EXECPROG
+execprog()
+{
+	char buf[80];
+	strcpy(buf,prog);
+	strcat(buf," ");
+	strcat(buf,Fil_nam);
+	system(buf);
+	exit(99);
+}
+#endif
 
 /*
  *	Move the cursor to the appropriate position.
@@ -43,7 +69,7 @@ register int x, y;
 		y += x / Width;
 		x = x % Width;
 	}
-	ioctl(1, KB_CURS,x | (y<<8));
+	scr_curs(y,x);
 }
 
 /*
@@ -52,7 +78,7 @@ register int x, y;
 
 beep()
 {
-	write(1, "\007", 1);
+	scr_beep();
 }
 
 /*
@@ -90,16 +116,16 @@ getchar()
 
 clr_eol()
 {
-	ioctl(1, KB_CLEOL);
+	scr_eol();
 }
 
 clr_scrn()
 {
-	ioctl(1, KB_CLEAR);
+	scr_clear();
 }
 
 dn_scrl()
 {
-	return(ioctl(1, KB_RSCRL));
+	mv_curs(0,STATUS+1);
+	scr_linsert();
 }
-

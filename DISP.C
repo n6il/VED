@@ -1,5 +1,5 @@
-/*	Copyright (c) 1982 by Manx Software Systems	*/
-/*	Copyright (c) 1982 by Jim Goodnow II		*/
+/*	Copyright (c) 1982,1986 by Manx Software Systems	*/
+/*	Copyright (c) 1982, 1986 by Jim Goodnow II		*/
 
 #include	"ved.h"
 
@@ -144,6 +144,7 @@ char *lp;
  *	This routine finds the next line.
  */
 
+char *
 get_next(lp)
 register char *lp;
 {
@@ -160,6 +161,7 @@ register char *lp;
  *	This routine finds the previous line.
  */
 
+char *
 get_prev(lp)
 register char *lp;
 {
@@ -185,7 +187,7 @@ scrl_up()
 	draw(Bot_lp, Bot_lin, Bot_y - want);
 	Top_y -= want;
 	while (Top_y < SCR_TOP) {
-		set_params(Top_lp);
+		set_param(Top_lp);
 		Top_y += Lin_siz;
 		Top_lp = get_next(Top_lp);
 		Top_lin++;

@@ -1,5 +1,5 @@
-/*	Copyright (c) 1982 by Manx Software Systems	*/
-/*	Copyright (c) 1982 by Jim Goodnow II		*/
+/*	Copyright (c) 1982, 1986 by Manx Software Systems	*/
+/*	Copyright (c) 1982, 1986 by Jim Goodnow II		*/
 
 #include	"ved.h"
 
@@ -24,6 +24,7 @@ insert()
 	for (;;) {
 		c = getchar();
 		switch(c) {
+		case 17: /* ^Q, for old Apple 2e's */
 		case 0x1b:		/* Escape character */
 			t_insert(Cur_lp, len, buf, ebuf-buf);
 			Cur_ptr = Cur_lp + (Cur_ptr - buf);
@@ -131,29 +132,46 @@ lin_del()
 {
 	register char *t;
 
-	if (Cur_lp == Mem_buf && get_next(Cur_lp) == End_buf)
+	if (Cur_lp == Mem_buf && get_next(Cur_lp) == End_buf){
+		End_buf = Mem_buf;
+		t_insert(Mem_buf,0,"\r",1);
+		Cur_ptr=Cur_lp;
+		set_param(Cur_lp);
+		draw_lin(Cur_lp,0,1);
 		return;
+	}
 	t = Cur_lp;
 	while (Num-- && (t = get_next(t)) != End_buf)
 		;
 	t_insert(Cur_lp, t-Cur_lp, 0, 0);
 	if (Cur_lp == End_buf) {
-		Bot_lin = Cur_lin--;
-		Bot_lp = End_buf;
-		Cur_lp = get_prev(Cur_lp);
-		Cur_ptr = Cur_lp;
-		set_param(Cur_lp);
-		Cur_y -= Lin_siz;
-		if (Cur_y < Top_y) {
-			redraw(Cur_lp, Cur_lin, SCR_TOP);
-			return;
+		if (Cur_lp == Mem_buf){
+			t_insert(Mem_buf,0,"\r",1);
+			Bot_lin = 2;
+			Bot_lp = End_buf;
+			Cur_ptr = Cur_lp;
+			set_param(Cur_lp);
+			Cur_y=1;
+			draw_lin(Cur_lp,0,1);
+		} else {
+			Bot_lin = Cur_lin--;
+			Bot_lp = End_buf;
+			Cur_lp = get_prev(Cur_lp);
+			Cur_ptr = Cur_lp;
+			set_param(Cur_lp);
+			Cur_y -= Lin_siz;
 		}
-		while (--Bot_y >= Cur_y + Lin_siz)
-			draw_lin("-\r", 0, Bot_y);
-		return;
+		if (Cur_y < Top_y) 
+			redraw(Cur_lp, Cur_lin, SCR_TOP);
+		else {
+			while (--Bot_y >= Cur_y + Lin_siz)
+				draw_lin("-\r", 0, Bot_y);
+			++Bot_y;
+		}
+	} else {
+		Cur_ptr = Cur_lp;
+		draw(Cur_lp, Cur_lin, Cur_y);
 	}
-	Cur_ptr = Cur_lp;
-	draw(Cur_lp, Cur_lin, Cur_y);
 }
 
 yank()
