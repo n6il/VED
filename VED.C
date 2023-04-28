@@ -90,17 +90,17 @@ char **argv;
             search(0);
             break;
         case '.':
-        case 0x13:
+        case 0x08: /* Left arrow */
             while (Num-- && Cur_ptr > Cur_lp)
                 Cur_ptr--;
             break;
         case ' ':
         case '\t':
-        case 0x06:
+        case 0x09: /* Right Arrow */
             while (Num-- && *Cur_ptr != '\r')
                 Cur_ptr++;
             break;
-        case 0x12:      /* Page Up */
+        case 0x42:      /* Page Up */
             Num = Cur_lin - 23 + Cur_x;
             if (Num < 1)
                 Num = 1;
@@ -113,7 +113,7 @@ char **argv;
             Cur_ptr = Cur_lp;
             redraw(Cur_lp, Cur_lin, SCR_BOT/2);
             break;
-        case 0x05: /*up arrow */
+        case 0x0b: /*up arrow */
             l=Cur_ptr-Cur_lp;
             t=Cur_lp;
         case '-':
@@ -132,7 +132,7 @@ char **argv;
                     redraw(Cur_lp, Cur_lin, SCR_BOT/2);
             }
             break;
-        case 0x16:      /* Page Down */
+        case 0x46:      /* Page Down */
             Num = Cur_lin + 23 + Cur_x;
             Cur_lp = Mem_buf;
             Cur_lin = 1;
@@ -143,7 +143,7 @@ char **argv;
             Cur_ptr = Cur_lp;
             redraw(Cur_lp, Cur_lin, SCR_BOT/2);
             break;
-        case 0x3: /* down arrow */
+        case 0xa: /* down arrow */
             l=Cur_ptr-Cur_lp;
         case 0x0d:
             if (get_next(Cur_ptr) != End_buf) {

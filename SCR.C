@@ -1,30 +1,30 @@
-/* Screen functions for the TELEVIDEO 950 terminal
+/* Screen functions for the FHL CoCo FLEX
  *
- * Copyright (c) 2005 Evenson Consulting Services
+ * 24 Apr 2023
+ * Michael Furman <n6il@ocs.net>
  */
 
-char curs[4];
+#include "ved.h"
+
+char curs[3];
 char bep[1];
-char eol[2];
-char clr[2];
-char ins[2];
+char eol[1];
+char clr[1];
 
 scr_init ()
 {
-    curs[0] = eol[0] = clr[0] = ins[0] = 0x1b;
-    curs[1] = '=';
-    eol[1] = 'T';
-    clr[1] = '*';
-    ins[1] = 'E';
+    curs[0] = 0x14;
+    eol[0] = 0x05;
+    clr[0] = 0x02;
     bep[0] = 0x07;
 }
 
 scr_curs (y, x) int y, x;
 {
-    curs[2] = y + ' ';
-    curs[3] = x + ' ';
+    curs[1] = y + ' ';
+    curs[2] = x + ' ';
 
-    write (1, curs, 4);
+    write (1, curs, 3);
 }
 
 scr_beep ()
@@ -34,15 +34,27 @@ scr_beep ()
 
 scr_eol ()
 {
-    write (1, eol, 2);
+    write (1, eol, 1);
 }
 
 scr_clear ()
 {
-    write (1, clr, 2);
+    write (1, clr, 1);
 }
 
 scr_linsert ()
 {
-    write (1, ins, 2);
+    int y, cy;
+    char *lp;
+
+    y = Bot_y;
+    cy = Cur_y;
+    lp = Cur_lp;
+
+    while (y > Cur_y ) {
+	    lp = get_prev(lp);
+	    draw(lp, 0, y--);
+    }
+    mv_curs(cy,0);
+    scr_eol();
 }

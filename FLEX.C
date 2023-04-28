@@ -17,7 +17,7 @@ init()
     free(Mem_buf);
     Max_mem -= 1024;
     Mem_buf = malloc(Max_mem);
-    Width = 80;
+    Width = 51;
     Lwidth = Width + 1;
     clr_scrn();
     gtty(0, &ss);

@@ -235,7 +235,7 @@ char *helpstr[] = {
 "-           previous line",
 "return      next line",
 "0/$         beginning/end of line",
-"g           go to line",
+"g/F/B       go to line/PgDn/PgUp",
 "h/m/l       top/middle/bottom of screen",
 "z           redraw the screen",
 "/string     search for string",
