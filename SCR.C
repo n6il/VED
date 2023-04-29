@@ -9,13 +9,14 @@
 char curs[3];
 char bep[1];
 char eol[1];
-char clr[1];
+char clr[2];
 
 scr_init ()
 {
     curs[0] = 0x14;
     eol[0] = 0x05;
-    clr[0] = 0x02;
+    clr[0] = 0x04;
+    clr[1] = 0x02;
     bep[0] = 0x07;
 }
 
@@ -39,7 +40,7 @@ scr_eol ()
 
 scr_clear ()
 {
-    write (1, clr, 1);
+    write (1, clr, 2);
 }
 
 scr_linsert ()
