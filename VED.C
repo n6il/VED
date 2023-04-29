@@ -16,8 +16,8 @@ char **argv;
 
     Rscrl = 1;
 
-    init();
     scr_init();
+    init();
     End_buf = Mem_buf;
     Cur_ptr = Cur_lp = Mem_buf;
     *Fil_nam = 0;
