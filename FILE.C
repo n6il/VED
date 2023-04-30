@@ -2,8 +2,18 @@
 /*  Copyright (c) 1982, 1986 by Jim Goodnow II           */
 
 #include    "ved.h"
+
+#ifdef __linux  /* Overrides FLEX09 */
+#define MODE 0666
+#else
+#ifdef FLEX09
 #define MODE 0x00  /* 0xC3 - file access mode for ProDOS */
                    /* 0x00 - text file for FLEX          */
+#else
+/* Unknown OS */
+#endif
+#endif
+
 
 read_fil(name)
 char *name;
@@ -12,7 +22,7 @@ char *name;
     register char *t, *tmp;
     char msg[60];
     register int cnt;
-    char buf[257];
+    static char buf[257];
 
     maknam(msg, name);
     mesg(msg);
@@ -27,12 +37,17 @@ char *name;
         buf[cnt] = 0;
         t = buf;
 
-        while (t = index(t, '\n'))
+        /* Convert LF to CR even on linux */
+        /* Use Octal LF ,as '\n' will be xlated to '\r' on FLEX */
+        while (t = index(t, '\012')) 
             *t++ = '\r';
 
         if (t_insert(tmp, 0, buf, cnt)) {
-            mesg("file too big");
-            break;
+            strcpy(errmsg,"file too big");
+            mesg(errmsg);
+            errflag=1;
+            close(fd);
+            quit();
         }
         tmp += cnt;
         if (cnt != 256)
@@ -57,6 +72,29 @@ char *name;
         mesg("can't open file.");
         return(-1);
     }
+
+#ifdef __linux  /* Overrides FLEX09 */
+
+    /* Convert CR to LF on Linux */
+    int size = (End_buf - tmp);
+
+    for(cnt = 0; cnt < size; cnt++)
+    {
+       if(*tmp == 0x0d)
+       {
+          *tmp = 0x0a;
+       }
+       tmp++;
+    }
+    tmp = Mem_buf;
+#else
+#ifdef FLEX09
+ 
+#else
+/* Unknown OS */
+#endif
+#endif
+
     cnt = write(fd, tmp, End_buf - tmp);
     close(fd);
     if (cnt != End_buf - tmp) {

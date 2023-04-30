@@ -18,17 +18,16 @@ int y;
     mv_curs(d, y);
     for (;;) {
         c = *lp++;
-        if (c < 0x20) {
+        if (c < KEY_SP) {
             switch(c) {
-            case '\t':
+            case KEY_TAB:
                 i = Tabwidth;
                 while (i <= d)
                     i += Tabwidth;
                 write(1, "                     ", i-d);
                 d = i;
                 break;
-            case 0x00:
-            case 0x0d:
+            case KEY_CR:
                 clr_eol();
                 return;
             default:
@@ -85,7 +84,7 @@ register int y;
         if (y >= SCR_BOT)
             break;
         if (Bot_lp >= End_buf)
-            draw_lin("-\r", 0, y++);
+            draw_lin("~\r", 0, y++);
         else {
             set_param(Bot_lp);
             if (y + Lin_siz > SCR_BOT)
@@ -118,15 +117,15 @@ char *lp;
         if (Cur_ptr == lp)
             Cur_x = d;
         c = *lp++;
-        if (c < 0x20) {
+        if (c < KEY_SP) {
             switch(c) {
-            case '\t':
+            case KEY_TAB:
                 c = Tabwidth;
                 while (c <= d)
                     c += Tabwidth;
                 d = c;
                 break;
-            case 0x0d:
+            case KEY_CR:
                 d++;
                 Lin_siz = d / Lwidth + 1;
                 return;
@@ -150,7 +149,7 @@ get_next(lp)
 register char *lp;
 {
     *End_buf = 0;
-    lp = index(lp, 0x0d);
+    lp = index(lp, KEY_CR);
     if (lp == 0)
         lp = End_buf;
     else
@@ -167,7 +166,7 @@ get_prev(lp)
 register char *lp;
 {
     lp--;
-    while (*--lp != 0x0d && lp >= Mem_buf)
+    while (*--lp != KEY_CR && lp >= Mem_buf)
         ;
     return(lp+1);
 }

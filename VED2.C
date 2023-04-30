@@ -3,6 +3,26 @@
 
 #include "ved.h"
 
+/* */
+
+int Max_mem;
+char *Mem_buf;
+char *End_buf;
+int Top_lin, Bot_lin, Cur_lin;
+char *Top_lp, *Bot_lp, *Cur_lp, *Cur_ptr;
+int Bot_y, Top_y;
+int Cur_y, Cur_x;
+int Lin_siz;
+int Width, Lwidth;
+int Modflg;
+int Insert;
+int Rscrl;
+char Fil_nam[80];
+int Num, Val;
+char Ybuf[1024];
+int Ylen;
+int Tabwidth;
+
 int errflag=0;
 int errline, errcol;
 char errmsg[90];
@@ -16,26 +36,56 @@ char **argv;
 
     Rscrl = 1;
 
-    scr_init();
     init();
+    scr_init();
     End_buf = Mem_buf;
     Cur_ptr = Cur_lp = Mem_buf;
     *Fil_nam = 0;
-    while (--argc) {
 
-        Tabwidth = 4; /* set deafult tab width to 4 */
+    Tabwidth = 4; /* set default tab width to 4 */
 
-        if (*(*++argv) == '-') {
-            switch ((*argv)[1]) {
-            case 't':
-                Tabwidth = atoi(*argv+2);
-                break;
+    /* Parse arguments */
+    for(i=1;i<argc;i++)
+    {
+        t=argv[i];
+        if (*t == '-') {
+            if(*(t+1) == 't') {;
+                Tabwidth = atoi((t+2));
             }
         }
         else {
-            strcpy(Fil_nam, argv[0]);
+            if(*t) /* Filename was present */
+              strcpy(Fil_nam, t);
         }
     }
+
+#ifdef __linux  /* Overrides FLEX09 */
+
+#else
+#ifdef FLEX09
+
+    if(*Fil_nam) /* Filename was present */
+    {
+     /* Flex does NOT like files without an extension */
+    /* If user specified filename doesn't have an extension, append .txt to the filename */
+
+    if((t=rindex(Fil_nam,'.')) == (char *)0)  /* Search for last occurence */
+    {/* name doesn't contain a '.' */
+        strcat(Fil_nam,".txt");   /* Append .txt to the name */
+    }
+    else
+    { /* We got a '.' in the name , check it there are minimum one char after the '.' */
+      if(strlen(t) <= 1)
+          {/* filename ends with a '.' , append txt to the name */
+             strcat(Fil_nam,"txt");   /* Append txt to the name */
+          }
+    }
+    }
+#else
+/* Unknown OS */
+#endif
+#endif
+
     if (*Fil_nam == 0 || read_fil(Fil_nam) < 0)
         t_insert(Cur_ptr, 0, "\r", 1);
 
@@ -56,8 +106,8 @@ char **argv;
             debug();
             break;
 #endif
-        case 'r':
-            if (*Cur_ptr == '\r' || (c = getchar()) == '\r') {
+        case KEY_REPL_CH:
+            if (*Cur_ptr == KEY_CR || (c = getchar()) == KEY_CR) {
                 beep();
                 break;
             }
@@ -70,38 +120,38 @@ char **argv;
             else
                 draw_lin(Cur_ptr, Cur_x, Cur_y);
             break;
-        case 'z':
+        case KEY_REDRW:
+        case KEY_REDRW1:
             redraw(Cur_lp, Cur_lin, SCR_BOT/2);
             break;
-        case 'y':
+        case KEY_YANK:
             c = getchar();
-            if (c == 'y' || c == 'd')
+            if (c == KEY_YANK || c == KEY_DELLIN)
                 yank();
-            if (c == 'd')
+            if (c == KEY_DELLIN)
                 lin_del();
             break;
-        case 'p':
+        case KEY_PASTE:
             put();
             break;
-        case 'n':
+        case KEY_RPT_SRCH:
             search(1);
             break;
-        case '/':
+        case KEY_SRCH:
             search(0);
             break;
-        case '.':
-        case 0x13:
+        case KEY_BS: /* backspace */
+        case KEY_MOV_LEFT: /* backspace */
             while (Num-- && Cur_ptr > Cur_lp)
                 Cur_ptr--;
             break;
-        case ' ':
-        case '\t':
-        case 0x06:
-            while (Num-- && *Cur_ptr != '\r')
+        case KEY_SP:
+    case KEY_MOV_RIGHT:
+            while (Num-- && *Cur_ptr != KEY_CR)
                 Cur_ptr++;
             break;
-        case 0x12:      /* Page Up */
-            Num = Cur_lin - 23 + Cur_x;
+        case KEY_PGUP: /*  page up */
+            Num = Cur_lin - (SCR_BOT-1) + Cur_x;
             if (Num < 1)
                 Num = 1;
             Cur_lp = Mem_buf;
@@ -113,15 +163,17 @@ char **argv;
             Cur_ptr = Cur_lp;
             redraw(Cur_lp, Cur_lin, SCR_BOT/2);
             break;
-        case 0x05: /*up arrow */
+        case KEY_MOV_UP: /*up arrow */
             l=Cur_ptr-Cur_lp;
             t=Cur_lp;
-        case '-':
+        case KEY_MOV_PREVLIN:
             if (Cur_lp == Mem_buf)
                 break;
             Cur_ptr = Cur_lp = get_prev(Cur_lp);
-            if (c==0xb)
+
+        if (c==KEY_MOV_UP) /* Move one line up, keep X position  */
                 Cur_ptr += (l<(i=t-Cur_lp-1)?l:i);
+
             set_param(Cur_lp);
             Cur_y -= Lin_siz;
             Cur_lin--;
@@ -132,8 +184,8 @@ char **argv;
                     redraw(Cur_lp, Cur_lin, SCR_BOT/2);
             }
             break;
-        case 0x16:      /* Page Down */
-            Num = Cur_lin + 23 + Cur_x;
+        case KEY_PGDN: /* page down */
+            Num = Cur_lin + (SCR_BOT-1) + Cur_x;
             Cur_lp = Mem_buf;
             Cur_lin = 1;
             while (--Num && (t = get_next(Cur_lp)) != End_buf) {
@@ -143,31 +195,33 @@ char **argv;
             Cur_ptr = Cur_lp;
             redraw(Cur_lp, Cur_lin, SCR_BOT/2);
             break;
-        case 0x3: /* down arrow */
+        case KEY_MOV_DN: /* down arrow */
             l=Cur_ptr-Cur_lp;
-        case 0x0d:
+        case KEY_CR:
             if (get_next(Cur_ptr) != End_buf) {
                 Cur_ptr = Cur_lp = get_next(Cur_ptr);
-                if (c==0xa)
+
+                if (c==KEY_MOV_DN) /* Move one line down, keep X position  */
                     Cur_ptr += (l<(i=get_next(Cur_lp)-Cur_lp-1)?l:i);
+
                 Cur_lin++;
                 Cur_y += Lin_siz;
                 if (Cur_lin == Bot_lin)
                     scrl_up();
             }
             break;
-        case 0x01:
+        case KEY_MOV_BEGLIN:
             Cur_ptr = Cur_lp;
             break;
-        case 0x07:
+        case KEY_MOV_ENDLIN:
             Cur_ptr = get_next(Cur_ptr) - 1;
             break;
-        case 'h':
+        case KEY_MOV_TOP_SCR:
             Cur_lp = Cur_ptr = Top_lp;
             Cur_y = Top_y;
             Cur_lin = Top_lin;
             break;
-        case 'm':
+        case KEY_MOV_MID_SCR:
             Cur_lp = Top_lp;
             Cur_y = Top_y;
             Cur_lin = Top_lin;
@@ -179,13 +233,13 @@ char **argv;
             }
             Cur_ptr = Cur_lp;
             break;
-        case 'l':
+        case KEY_MOV_BOT_SCR:
             Cur_lp = Cur_ptr = get_prev(Bot_lp);
             set_param(Cur_lp);
             Cur_y = Bot_y - Lin_siz;
             Cur_lin = Bot_lin - 1;
             break;
-        case 'g':
+        case KEY_GOTO:
             if (Val == 0)
                 Num = -1;
             Cur_lp = Mem_buf;
@@ -200,14 +254,14 @@ char **argv;
         case ':':
             colon();
             break;
-        case 'x':
+        case KEY_DELCH:
             delete();
             break;
-        case 'd':
-            if (getchar() == 'd')
+        case KEY_DELLIN:
+            if (getchar() == KEY_DELLIN)
                 lin_del();
             break;
-        case 'o':
+        case KEY_INS_BELOW:
             set_param(Cur_lp);
             Cur_lp = Cur_ptr = get_next(Cur_ptr);
             Cur_y += Lin_siz;
@@ -217,7 +271,7 @@ char **argv;
                 scrl_up();
             else
                 draw(Cur_lp, Cur_lin, Cur_y);
-        case 'i':
+        case KEY_INS:
             insert();
             break;
         case '?':

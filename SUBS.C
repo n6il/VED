@@ -5,9 +5,19 @@
 
 pcrlf ()
 {
+
+#ifdef __linux  /* Overrides FLEX09 */
+    write(1, "\015\012",2); 
+#else
+#ifdef FLEX09
 #asm
     jsr $CD24
 #endasm
+#else
+/* Unknown OS */
+#endif
+#endif
+
 }
 
 colon()
@@ -26,14 +36,14 @@ colon()
         *cp = 0;
         mesg(buf);
         c = getchar();
-        if (c == '\r')
+        if (c == KEY_CR)
             break;
-        if (c == 8) {
+        if (c == KEY_BS) {
             if (cp > buf+1)
                 cp--;
             continue;
         }
-        if (c < 0x20)
+        if (c < KEY_SP)
             continue;
         *cp++ = c;
     }
@@ -43,7 +53,7 @@ colon()
         stats();
         return;
     case 'q':
-        while ((c=*++cp) && c != ' ')
+        while ((c=*++cp) && c != KEY_SP)
             if (c == '!')
                 nowrite=1;
 #ifdef EXECFLAG
@@ -64,7 +74,7 @@ colon()
                 quit();
             return;
         }
-        while (*++cp == ' ')
+        while (*++cp == KEY_SP)
             ;
         if (*cp == 0)
             cp = Fil_nam;
@@ -72,7 +82,7 @@ colon()
             Modflg = 0;
         return;
     case 'r':
-        while (*++cp == ' ')
+        while (*++cp == KEY_SP)
             ;
         read_fil(cp);
         draw(Cur_lp, Cur_lin, Cur_y);
@@ -84,11 +94,11 @@ colon()
         }
         if (*(cp+1) == '!')
             ++cp;
-        while (*++cp == ' ')
+        while (*++cp == KEY_SP)
             ;
         Cur_lp = Cur_ptr = End_buf = Mem_buf;
         if (read_fil(cp) < 0)
-            t_insert(Cur_ptr, 0, "\r", 1);
+            t_insert(Cur_ptr, 0, KEY_CR, 1);
         Modflg = 0;
         strcpy(Fil_nam, cp);
         redraw(Mem_buf, 1, SCR_TOP);
@@ -106,21 +116,21 @@ int flg;
     register int c;
 
     cp = buf;
-    *cp++ = '/';
+    *cp++ = KEY_SRCH;
     for (;;) {
         *cp = 0;
         mesg(buf);
         if (flg)
             break;
         c = getchar();
-        if (c == '\r')
+        if (c == KEY_CR)
             break;
-        if (c == 8) {
+        if (c == KEY_BS) {
             if (cp > buf+1)
                 cp--;
             continue;
         }
-        if (c < 0x20)
+        if (c < KEY_SP)
             continue;
         *cp++ = c;
     }
@@ -224,25 +234,26 @@ int num;
 }
 
 char *helpstr[] = {
-"i           insert text",
-"escape      end insert",
+"i/Esc o/Esc enter/leave INSERT mode",
+"return/-    beginning of next/previous line",
+"k/j         line up/down",
+"spc or l    next character",
+"bspc or h   previous character",
+"0(zero)/$   beginning/end of line",
+"Ctl-B/Ctl-F page backwards/forward",
+"T/M/B       top/middle/bottom of screen",
+"g           go to line",
+"/string     search for string",
+"n           repeat last search",
+"Ctrl-R or z redraw the screen",
 "r           replace character",
 "x           delete characters",
 "dd          delete lines",
 "yy          yank lines",
 "yd          yank and delete lines",
-"p           put yanked lines",
-"-           previous line",
-"return      next line",
-"0/$         beginning/end of line",
-"g           go to line",
-"h/m/l       top/middle/bottom of screen",
-"z           redraw the screen",
-"/string     search for string",
-"n           repeat last search",
+"p           paste yanked lines",
 ":q[!][x]    quit",
-":w          write file",
-":r          read file",
+":w or :r    write file or read file",
 ":e          edit new file",
 ":f          file stats",
 0
@@ -251,6 +262,7 @@ char *helpstr[] = {
 help()
 {
     register char **cp;
+    char msg[80];
 
     clr_scrn();
     mv_curs(0, SCR_TOP+1);
@@ -259,9 +271,13 @@ help()
         write(1, *cp, strlen(*cp));
         pcrlf ();
     }
-    mesg("VED 2.1 - hit return to continue");
-    while (getchar() != '\r')
+    
+    sprintf(msg,"%s %s - hit return to continue",PROGRAM_NAME,VERSION);
+    mesg(msg);
+
+    while (getchar() != KEY_CR)
         ;
+    clr_scrn();
     mesg("");
     redraw(Cur_lp, Cur_lin, Cur_y);
 }

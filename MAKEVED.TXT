@@ -1,17 +1,30 @@
-cc ved.c +r +a +c +s
-cc scr.c +r +a +c +s
+REM this script builds the VED2 editor from source
+REM it assumes the existence of a no-op command
+REM named REM.CMD for these comments to be allowed.
+REM
+REM Usage:
+REM - have the C compiler on drive 0
+REM - have this disk in any other drive
+REM - type:
+REM ASN W=n
+REM EXEC MAKEVED.TXT
+REM
+REM where n is the drive holding this disk
+REM
+cc ved2.c +r +a +c +s
+cc scransi.c +r +a +c +s
 cc flex.c +r +a +c +s
 cc file.c +r +a +c +s
 cc subs.c +r +a +c +s
 cc disp.c +r +a +c +s
 cc insert.c +r +a +c +s
 cc mem.c +r +a +c +s
-y o 1.ved.lst casm ved.a -o=ved.r +l +s
-y o 1.scr.lst casm scr.a -o=scr.r +l +s
-y o 1.flex.lst casm flex.a -o=flex.r +l +s
-y o 1.file.lst casm file.a -o=file.r +l +s
-y o 1.subs.lst casm subs.a -o=subs.r +l +s
-y o 1.disp.lst casm disp.a -o=disp.r +l +s
-y o 1.insert.lst casm insert.a -o=insert.r +l +s
-y o 1.mem.lst casm mem.a -o=mem.r +l +s
-cload 0.cstart.r ved.r scr.r flex.r file.r subs.r disp.r insert.r mem.r +l=0.clib.lib +o=ved.cmd +s
+y o ved2.lst casm ved2.a -o=ved2.r +l +s
+y o scransi.lst casm scransi.a -o=scransi.r +l +s
+y o flex.lst casm flex.a -o=flex.r +l +s
+y o file.lst casm file.a -o=file.r +l +s
+y o subs.lst casm subs.a -o=subs.r +l +s
+y o disp.lst casm disp.a -o=disp.r +l +s
+y o insert.lst casm insert.a -o=insert.r +l +s
+y o mem.lst casm mem.a -o=mem.r +l +s
+cload 0.cstart.r ved2.r scransi.r flex.r file.r subs.r disp.r insert.r mem.r +l=0.clib.lib +o=ved2.cmd +s

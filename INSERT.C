@@ -28,7 +28,7 @@ insert()
         Start_ptr = Cur_ptr;
         c = getchar();
         switch(c) {
-        case 0x1b:      /* Escape character */
+        case KEY_ESC:      /* Escape character */
             t_insert(Cur_lp, len, buf, ebuf-buf);
             Cur_ptr = Cur_lp + (Cur_ptr - buf);
             Bot_lp += (ebuf - buf) - len;
@@ -38,7 +38,7 @@ insert()
             if (siz != Lin_siz || max != Lin_siz)
                 draw(Cur_lp, Cur_lin, Cur_y);
             return;
-        case 0x08:
+        case KEY_BS:
             if (Cur_ptr == buf)
                 break;
             blockmv(Cur_ptr-1, Cur_ptr, ebuf-Cur_ptr);
@@ -50,11 +50,11 @@ insert()
             break;
         /* case '.': */
         /*    c = getchar();    */
-        case '\t':
+        case KEY_TAB:
             inscnt = Tabwidth - (Cur_x % Tabwidth);
             goto skip;
         default:
-            if (c < ' ' && c != 0x0d) {
+            if (c < KEY_SP && c != KEY_CR) {
                 beep();
                 break;
             }
@@ -68,16 +68,16 @@ skip:
             ebuf = ebuf + inscnt;
             left = left - inscnt;
 
-            if (c == '\t')
+            if (c == KEY_TAB)
             {
                while (inscnt--)
-                   *Cur_ptr++ = ' ';
+                   *Cur_ptr++ = KEY_SP;
                Cur_ptr--;
             }
             else
                 *Cur_ptr = c;
 
-            if (c == 0x0d) {
+            if (c == KEY_CR) {
                 t_insert(Cur_lp, len, buf, ebuf-buf);
                 draw(Cur_lp, Cur_lin, Cur_y);
                 set_param(Cur_lp);
@@ -127,7 +127,7 @@ delete()
     l = Lin_siz;
     if (Cur_ptr == End_buf - 1)
         return;
-    c = index(Cur_ptr, 0x0d) - Cur_ptr;
+    c = index(Cur_ptr, KEY_CR) - Cur_ptr;
     if (Num > c)
         Num = c;
     if (Num == 0)
@@ -136,7 +136,7 @@ delete()
     t_insert(Cur_ptr, Num, Cur_ptr, 0);
     Bot_lp -= Num;
     set_param(Cur_lp);
-    if (c == 0x0d || l != Lin_siz)
+    if (c == KEY_CR || l != Lin_siz)
         draw(Cur_lp, Cur_lin, Cur_y);
     else
         draw_lin(Cur_ptr, Cur_x, Cur_y);
@@ -148,7 +148,7 @@ lin_del()
 
     if (Cur_lp == Mem_buf && get_next(Cur_lp) == End_buf){
         End_buf = Mem_buf;
-        t_insert(Mem_buf,0,"\r",1);
+        t_insert(Mem_buf,0,KEY_CR,1);
         Cur_ptr=Cur_lp;
         set_param(Cur_lp);
         draw_lin(Cur_lp,0,1);
@@ -160,7 +160,7 @@ lin_del()
     t_insert(Cur_lp, t-Cur_lp, 0, 0);
     if (Cur_lp == End_buf) {
         if (Cur_lp == Mem_buf){
-            t_insert(Mem_buf,0,"\r",1);
+            t_insert(Mem_buf,0,KEY_CR,1);
             Bot_lin = 2;
             Bot_lp = End_buf;
             Cur_ptr = Cur_lp;
@@ -179,7 +179,7 @@ lin_del()
             redraw(Cur_lp, Cur_lin, SCR_TOP);
         else {
             while (--Bot_y >= Cur_y + Lin_siz)
-                draw_lin("-\r", 0, Bot_y);
+                draw_lin("~\r", 0, Bot_y);
             ++Bot_y;
         }
     } else {

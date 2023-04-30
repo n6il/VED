@@ -1,0 +1,134 @@
+VED2 Screen Editor V1.06
+
+VED2 [-tn] [file]
+
+VED2 is a screen-oriented text editor written in C. It was originally written
+by Manx Software Systems/Jim Goodnow II between 1982-1986. This version has
+been modified to use ANSI sequences to control a 25-line 80-column terminal.
+The source code is included in 'makeved.dsk'. VED2 is not particularly fast
+or smart, but it does get the job done.
+
+If VED2 is invoked with a file name, that file will be loaded into the memory
+buffer, otherwise it will be empty. VED2 does all its editing in memory and so
+is limited in the size of files that it can edit.
+
+In VED2, the memory buffer is never completely empty: there will always be
+at least one newline in the buffer.
+
+By default, tab width is the current system value. This can be overridden by
+the '-t' option. For example:
+
+VED2 -t8 file.a65
+
+this is useful since C programs work well with a tab size of four, but assembly
+language works better with a tab size of eight.
+
+VED2 has a 1000 character limit on the size of a line. If a line is longer than
+the width of the screen, it wraps to the next line. If a line starts at the
+bottom of the screen, and is too wide to fit, the '@' character is displayed
+instead of the line. At the end of the file, all lines of the terminal beyond
+the end will consist only of a single '~' on each line.
+
+Commands shown with the prefix '*' take a numeric prefix. The prefix is echoed
+on the status line as it is typed. With no prefix, * defaults to 1.
+
+VED2 starts in COMMAND mode. Use the 'i' or 'o' commands to enter INSERT mode
+(the status line shows the text '<INSERT>'). Press 'Esc' to return to COMMAND
+mode.
+
+ENTERING INSERT MODE
+
+i               Switch to insert mode at current cursor position.
+o               Insert a new line below the current line, move the cursor to
+                that line and switch to insert mode.
+
+MOVING AROUND THE SCREEN/FILE
+
+return/-        Move to the beginning of the next/previous line.
+k/j             Move one line up/down , keep cursor x position.
+space or l      Move to the next character of this line.
+backspace or h  Move to the previous character of this line.
+
+0/$             Move to the first/last character of this line.
+Ctl-F/Ctl-B     Page up/down.
+T/M/B           Move to the top/middle/bottom line of the screen.
+*g              Move to line * of the file.
+/string         Move forward to the next occurrence of 'string'.
+n               Repeat the most recent search.
+Ctrl-R or z     Redraw the screen, centred on the cursor position.
+
+INSERTING/DELETING LINES AND CHARACTERS
+
+r               Replace the character under the cursor with the next
+                character typed.
+*x              Delete * characters from the cursor up to but not including
+                the newline character.
+*dd             Delete * lines starting with the current line.
+
+Deleting the last character on the line (newline character) appends the
+following line to the current line.
+
+MOVING TEXT AROUND
+
+These commands make use of a 1000 character yank buffer. The contents of this
+buffer are retained across files.
+
+*yy             Yank * lines, starting with the current line, into the yank
+                buffer.
+*yd             Yank * lines, starting with the current line, into the yank
+                buffer and then delete them.
+p               Paste the lines in the yank buffer after the current line.
+                The yank buffer is not modified.
+
+MISCELLANEOUS
+?               Display a help screen.
+
+FILE OPERATIONS
+
+Type ':' to use these file-related commands:
+
+:f              Display info about the current file.
+:w file         Write the buffer to the specified file name.
+:w              Write the buffer to the last specified file.
+:e file         Clear the buffer and read the named file.
+:e! file        Clear the buffer and read the named file even if the file is
+                modified.
+:r file         Read the named file into the buffer.
+:q              Quit (exit) the editor.
+:q!             Quit the editor even if the file is modified.
+
+VED2 protects against accidental loss of the work being edited: it will not
+let you exit or edit another file if the current file has been modified. The
+'!' command suffix overrides this behaviour.
+
+VED2 will only edit text files. Binary files will not be edited.
+
+BUILDING VED2 ON LINUX
+
+$ cd linux
+$ make
+
+BUILDING VED2 ON FLEX
+
+The source files are on the FLEX virtual disk image  "makeved.dsk".
+The build uses the McCosh C compiler. If the compiler is on drive 0
+and makeved.dsk is disk 2 then rebuild from within FLEX like this:
+
++++ASN W=2
++++EXEC MAKEVED
+
+An alternative script "MAKEVEDS" performs a stack-checked build.
+
+If you modify the source code outside of FLEX then you can use
+flex_vfs to move the source code onto the makeved.dsk virtual
+disk image like this:
+
+flex_vfs: mount 0  makeved.dsk
+flex_vfs: delete 0.*.*
+INFO 14 files match 0.*.*
+flex_vfs: uppercase
+FLEX file specifiers will be forced to upper-case
+flex_vfs: import 0 flex/*.* xxx=compress
+INFO 14 files imported (0 skipped)
+flex_vfs: exit
+

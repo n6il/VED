@@ -1,0 +1,36 @@
+
+Ved2 Changelog:
+
+V1.06 - 2016-Nov-16
+----------------------
+Fixed     - Exit if user specified file is to big to fit in memory.
+
+
+V1.05 - 2016-Nov-16
+----------------------
+Fixed     - Remove printing stackusage on exit.
+
+V1.04 - 2016-Nov-15
+----------------------
+Fixed     - Executing VED2 without a filename , passes argv[0] as argument ie. opens the executable
+
+
+V1.03 - 2016-Nov-14
+----------------------
+Fixed     - Comment in file.c 
+Fixed     - Replace NULL with ((char*) 0) in file.c 
+Fixed    - Stackoverflow on FLEX - Set stacksize to 1280 in flex.c (flex)
+
+V1.02 - 2016-Nov-13
+----------------------
+Add        - On exit/quit call clr_scrn(); (linux)
+Fixed     - Mapped KEY_BS to DEL (linux)
+
+
+
+V1.01 - 2016-Nov-13
+----------------------
+Add        - Named application VED2 , and changed version to 1.01
+Fixed     - version number to 1.01
+Fixed     - Apend .txt to filename without an extension (Flex)
+Fixed     - Convert CR to LF on write/save file (linux)

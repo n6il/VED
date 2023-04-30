@@ -1,0 +1,30 @@
+REM this script builds the VED2 editor from source - WITH stackcheck
+REM it assumes the existence of a no-op command
+REM named REM.CMD for these comments to be allowed.
+REM
+REM Usage:
+REM - have the C compiler on drive 0
+REM - have this disk in any other drive
+REM - type:
+REM ASN W=n
+REM EXEC MAKEVED.TXT
+REM
+REM where n is the drive holding this disk
+REM
+cc ved2.c +r +a +c 
+cc scransi.c +r +a +c 
+cc flex.c +r +a +c 
+cc file.c +r +a +c 
+cc subs.c +r +a +c 
+cc disp.c +r +a +c 
+cc insert.c +r +a +c 
+cc mem.c +r +a +c 
+y o ved2.lst casm ved2.a -o=ved2.r +l 
+y o scransi.lst casm scransi.a -o=scransi.r +l 
+y o flex.lst casm flex.a -o=flex.r +l 
+y o file.lst casm file.a -o=file.r +l 
+y o subs.lst casm subs.a -o=subs.r +l 
+y o disp.lst casm disp.a -o=disp.r +l 
+y o insert.lst casm insert.a -o=insert.r +l 
+y o mem.lst casm mem.a -o=mem.r +l 
+cload 0.cstart.r ved2.r scransi.r flex.r file.r subs.r disp.r insert.r mem.r +l=0.clib.lib +o=ved2.cmd 
